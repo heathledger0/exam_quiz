@@ -1,0 +1,5 @@
+{
+  "areas": [
+    { "id": "money-order", "file": "data/money-order.json" }
+  ]
+}
