@@ -1,5 +1,24 @@
 {
   "areas": [
-    { "id": "money-order", "file": "data/money-order.json" }
+    {
+      "id": "money-order",
+      "file": "data/money-order.json"
+    },
+    {
+      "id": "postal-transfer",
+      "file": "data/postal-transfer.json"
+    },
+    {
+      "id": "insurance-practice",
+      "file": "data/insurance-practice.json"
+    },
+    {
+      "id": "insurance-system",
+      "file": "data/insurance-system.json"
+    },
+    {
+      "id": "insurance-products",
+      "file": "data/insurance-products.json"
+    }
   ]
 }

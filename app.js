@@ -183,6 +183,10 @@ function markNumbers(text) {
   return esc(text).replace(NUM_RE, '<span class="num">$1</span>');
 }
 
+function expText(q) {
+  return q.explanation ? markNumbers(q.explanation) : '<span class="muted">(원본에 해설이 없어요)</span>';
+}
+
 function fmtDate(t) {
   if (!t) return '없음';
   const d = new Date(t);
@@ -350,9 +354,9 @@ function renderList(id) {
     const it = itemOf(q.id);
     const badge = isMastered(q.id) ? '<span class="badge m">외움</span>' : isWeak(q.id) ? '<span class="badge w">오답</span>' : '';
     html += `<li data-id="${esc(q.id)}" data-m="${isMastered(q.id) ? 1 : 0}">
-      <div><b>${q.no}.</b> ${markNegative(q.q)} ${badge}</div>
+      <div style="white-space:pre-line"><b>${q.no}.</b> ${markNegative(q.q)} ${badge}</div>
       <div class="ans">${CIRCLED[q.answer - 1]} ${markNumbers(q.choices[q.answer - 1])}</div>
-      <div class="muted" style="white-space:pre-line">${markNumbers(q.explanation)}</div>
+      <div class="muted" style="white-space:pre-line">${expText(q)}</div>
       ${q.answerNote ? `<div class="note">${esc(q.answerNote)}</div>` : ''}
       ${it ? `<div class="muted">맞힘 ${it.right} · 틀림 ${it.wrong}</div>` : ''}
     </li>`;
@@ -481,7 +485,7 @@ function renderQuiz() {
     const ok = session.picked === correctIdx;
     html += `<div class="result ${ok ? 'ok' : 'bad'}">
       <h3>${ok ? '정답이에요' : '틀렸어요'} · 정답 ${CIRCLED[correctIdx]}${progress.settings.shuffle ? ' (원본 번호)' : ''}</h3>
-      <div class="exp">${markNumbers(q.explanation)}</div>
+      <div class="exp">${expText(q)}</div>
       <div class="src">[출처: ${esc(q.source)}]</div>
       ${q.answerNote ? `<div class="note">${esc(q.answerNote)}</div>` : ''}
     </div>`;
@@ -559,10 +563,10 @@ function renderSummary() {
     for (const w of wrong) {
       const q = qById.get(w.id);
       if (!q) continue;
-      html += `<li><div><b>${esc(q.areaName)} ${q.no}.</b> ${markNegative(q.q)}</div>
+      html += `<li><div style="white-space:pre-line"><b>${esc(q.areaName)} ${q.no}.</b> ${markNegative(q.q)}</div>
         <div class="muted">내가 고른 답: ${CIRCLED[w.picked]} ${esc(q.choices[w.picked])}</div>
         <div class="ans">정답 ${CIRCLED[q.answer - 1]} ${markNumbers(q.choices[q.answer - 1])}</div>
-        <div class="muted" style="white-space:pre-line">${markNumbers(q.explanation)}</div></li>`;
+        <div class="muted" style="white-space:pre-line">${expText(q)}</div></li>`;
     }
     html += '</ul></div>';
   }
