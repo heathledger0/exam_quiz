@@ -19,6 +19,18 @@
     {
       "id": "insurance-products",
       "file": "data/insurance-products.json"
+    },
+    {
+      "id": "deposit-system",
+      "file": "data/deposit-system.json"
+    },
+    {
+      "id": "deposit-practice",
+      "file": "data/deposit-practice.json"
+    },
+    {
+      "id": "customer-satisfaction",
+      "file": "data/customer-satisfaction.json"
     }
   ]
 }

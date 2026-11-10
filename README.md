@@ -16,9 +16,14 @@
 - 설정 → **백업에서 복원**: 저장한 JSON 파일 선택
 - 백업한 지 3일이 지나면 홈 화면에 알림
 
+## 매뉴얼
+- 홈 → '온라인 평가 시스템 매뉴얼': 목차·검색, 쪽마다 옮긴 글 + 원본 화면 이미지
+- 원문: `source/manual.txt`, 이미지: `manual/pNN.jpg`
+
 ## 영역 추가
-1. `data/<영역id>.json` 추가 (형식은 `data/money-order.json` 참고)
-2. `data/index.json`의 `areas`에 `{ "id": "...", "file": "data/....json" }` 추가
+1. `source/<영역id>.txt`에 문항 원문 작성 (형식은 `tools/build_data.py` 맨 위 설명 참고)
+2. `tools/build_data.py`의 `AREAS`에 영역 추가
+3. `python3 tools/build_data.py` 실행 → `data/*.json`, `data/index.json` 갱신
 
 진도는 `영역id:문항번호`로 저장되므로, 기존 영역의 id와 문항 번호는 바꾸지 마세요.
 

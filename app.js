@@ -223,6 +223,7 @@ function render() {
   window.scrollTo(0, 0);
   if (h.startsWith('#/quiz')) return renderQuiz();
   if (h.startsWith('#/settings')) return renderSettings();
+  if (h.startsWith('#/manual')) return renderManual(decodeURIComponent(h.slice(9)));
   if (h.startsWith('#/list/')) return renderList(decodeURIComponent(h.slice(7)));
   if (h.startsWith('#/area/')) return renderArea(decodeURIComponent(h.slice(7)));
   return renderHome();
@@ -277,6 +278,7 @@ function renderHome() {
     </div>
   </div>`;
 
+  html += `<button class="btn" data-act="manual" style="margin-top:12px">📖 온라인 평가 시스템 매뉴얼</button>`;
   html += `<h2 class="muted" style="margin:20px 4px 8px;font-size:14px">영역 (${areas.length})</h2>`;
   for (const a of areas) {
     const s = areaStats(a);
@@ -300,6 +302,7 @@ function renderHome() {
     'exam-all': () => startExam(areas),
     'weak-all': () => startWeak(areas),
     'random-all': () => startRandom(areas),
+    manual: () => go('#/manual'),
   });
 }
 
@@ -645,6 +648,101 @@ function importBackup(file) {
     go('#/');
   };
   reader.readAsText(file);
+}
+
+/* ---------------- 매뉴얼 ---------------- */
+
+let manual = null;
+
+async function loadManual() {
+  if (manual) return manual;
+  try {
+    manual = await (await fetch('data/manual.json', { cache: 'no-cache' })).json();
+    // 오프라인에서도 보이도록 원본 이미지를 미리 받아 둔다 (서비스워커가 캐시)
+    setTimeout(() => manual.pages.forEach((p) => fetch(p.image).catch(() => {})), 1500);
+  } catch (e) {
+    manual = null;
+  }
+  return manual;
+}
+
+function highlight(text, q) {
+  const safe = esc(text);
+  if (!q) return safe;
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return safe.replace(re, (m) => `<mark>${m}</mark>`);
+}
+
+// #/manual            -> 목차 + 검색
+// #/manual/<쪽번호>    -> 해당 쪽
+async function renderManual(arg) {
+  setHeader('매뉴얼', true);
+  const m = await loadManual();
+  if (!m) {
+    $app.innerHTML = '<div class="card muted">매뉴얼을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</div>';
+    return;
+  }
+  const pageNo = parseInt(arg.replace(/^\//, ''), 10);
+  if (pageNo) return renderManualPage(m, pageNo);
+
+  const saved = (() => { try { return sessionStorage.getItem('manual-q') || ''; } catch (e) { return ''; } })();
+  $app.innerHTML = `
+    <div class="card">
+      <h2>${esc(m.title)}</h2>
+      <div class="muted">${esc(m.source)} · ${m.pages.length}쪽</div>
+      <input id="mq" type="search" placeholder="검색 (예: 카메라, 신분증, 장애)" value="${esc(saved)}"
+        style="width:100%;margin-top:12px;font-size:16px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text)">
+    </div>
+    <div class="card"><ul class="qlist" id="mlist"></ul></div>`;
+  const input = document.getElementById('mq');
+  const list = document.getElementById('mlist');
+  const draw = () => {
+    const q = input.value.trim();
+    try { sessionStorage.setItem('manual-q', q); } catch (e) { /* 무시 */ }
+    const ql = q.toLowerCase();
+    const hits = m.pages.filter((p) => !ql || (p.title + '\n' + p.text).toLowerCase().includes(ql));
+    if (!hits.length) { list.innerHTML = '<li class="muted">검색 결과가 없어요.</li>'; return; }
+    list.innerHTML = hits.map((p) => {
+      let snippet = '';
+      if (ql) {
+        const line = p.text.split('\n').find((l) => l.toLowerCase().includes(ql)) || '';
+        snippet = `<div class="muted">${highlight(line.slice(0, 120), q)}</div>`;
+      }
+      return `<li data-page="${p.page}" style="cursor:pointer"><b>${p.page}쪽</b> ${highlight(p.title, q)}${snippet}</li>`;
+    }).join('');
+    list.querySelectorAll('[data-page]').forEach((li) => li.addEventListener('click', () => go('#/manual/' + li.dataset.page)));
+  };
+  input.addEventListener('input', draw);
+  draw();
+}
+
+function renderManualPage(m, no) {
+  const idx = m.pages.findIndex((p) => p.page === no);
+  if (idx < 0) return go('#/manual');
+  const p = m.pages[idx];
+  const prev = m.pages[idx - 1], next = m.pages[idx + 1];
+  let q = '';
+  try { q = sessionStorage.getItem('manual-q') || ''; } catch (e) { /* 무시 */ }
+  setHeader(`매뉴얼 ${p.page}쪽`, true);
+  $app.innerHTML = `
+    <div class="card">
+      <h2>${highlight(p.title, q)}</h2>
+      <div style="white-space:pre-line">${highlight(p.text, q)}</div>
+    </div>
+    <div class="card" style="padding:8px">
+      <a href="${esc(p.image)}" target="_blank" rel="noopener"><img src="${esc(p.image)}" alt="${esc(p.title)} 원본 화면" loading="lazy" style="width:100%;display:block;border-radius:8px"></a>
+      <div class="muted" style="text-align:center;margin-top:6px">원본 화면 · 눌러서 크게 보기</div>
+    </div>
+    <div class="btn-grid">
+      <button class="btn" data-act="prev" ${prev ? '' : 'disabled'}>‹ 이전 쪽</button>
+      <button class="btn" data-act="next" ${next ? '' : 'disabled'}>다음 쪽 ›</button>
+    </div>
+    <button class="btn" data-act="toc" style="margin-top:8px">목차·검색으로</button>`;
+  bindActs({
+    prev: () => prev && go('#/manual/' + prev.page),
+    next: () => next && go('#/manual/' + next.page),
+    toc: () => go('#/manual'),
+  });
 }
 
 /* ---------------- 설정 ---------------- */

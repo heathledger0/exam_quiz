@@ -20,6 +20,9 @@ AREAS = [
     ("insurance-practice", "보험실무", "금융3급 _ 금융실무_보험실무", "insurance-practice.txt"),
     ("insurance-system", "보험제도", "금융3급 _ 우체국보험_보험제도", "insurance-system.txt"),
     ("insurance-products", "보험상품", "금융3급 _ 우체국보험_보험상품", "insurance-products.txt"),
+    ("deposit-system", "예금제도", "금융3급 _ 우체국예금_예금제도", "deposit-system.txt"),
+    ("deposit-practice", "예금실무", "금융3급 _ 금융실무_예금실무", "deposit-practice.txt"),
+    ("customer-satisfaction", "고객만족", "금융3급 _ 고객만족_고객만족", "customer-satisfaction.txt"),
 ]
 SOURCE_DOC = "2026년도 우정사업 직무인증평가 문제은행_2026.10.28. 현재"
 
@@ -68,7 +71,23 @@ def main():
         if aid not in known:
             index["areas"].append({"id": aid, "file": f"data/{aid}.json"})
         print(f"{name}: {len(qs)}문항, 메모 {sum('answerNote' in q for q in qs)}건")
+    build_manual()
     (ROOT / "data/index.json").write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def build_manual():
+    """source/manual.txt (@쪽|제목 + 본문) -> data/manual.json"""
+    text = (ROOT / "source/manual.txt").read_text(encoding="utf-8")
+    pages = []
+    for block in re.split(r"\n(?=@\d+\|)", text.strip()):
+        head, _, body = block.partition("\n")
+        m = re.match(r"@(\d+)\|(.*)", head)
+        no = int(m.group(1))
+        pages.append({"page": no, "title": m.group(2).strip(), "text": body.strip(),
+                      "image": f"manual/p{no:02d}.jpg"})
+    data = {"title": "온라인 평가 시스템 사용자 매뉴얼 (수험자용)", "source": "우정인재개발원", "pages": pages}
+    (ROOT / "data/manual.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"매뉴얼: {len(pages)}쪽")
 
 
 if __name__ == "__main__":

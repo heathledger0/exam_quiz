@@ -1,9 +1,10 @@
 // 오프라인에서도 열리도록 앱 파일을 캐시한다.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'quiz-' + VERSION;
 const SHELL = [
   './', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
-  'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'
+  'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png',
+  'data/index.json', 'data/manual.json'
 ];
 
 self.addEventListener('install', (e) => {

@@ -136,3 +136,5 @@ select, input[type=number] { font-size: 16px; padding: 8px; border-radius: 8px; 
 
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
 .stats b { display: block; font-size: 22px; }
+
+mark { background: var(--warn-weak); color: inherit; padding: 0 2px; border-radius: 3px; }
