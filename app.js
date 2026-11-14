@@ -275,6 +275,7 @@ function renderHome() {
       <button class="btn" data-act="exam-all">모의고사<small>전 영역 ${Math.min(progress.settings.examCount, total)}문항</small></button>
       <button class="btn" data-act="weak-all" ${weak ? '' : 'disabled'}>오답노트<small>${weak}문항</small></button>
       <button class="btn" data-act="random-all">전체 랜덤<small>${total}문항</small></button>
+      <button class="btn" data-act="fresh-all" ${fresh ? '' : 'disabled'} style="grid-column:1/-1">안 푼 문제만<small>전 영역 ${fresh}문항</small></button>
     </div>
   </div>`;
 
@@ -302,6 +303,7 @@ function renderHome() {
     'exam-all': () => startExam(areas),
     'weak-all': () => startWeak(areas),
     'random-all': () => startRandom(areas),
+    'fresh-all': () => startFresh(areas),
     manual: () => go('#/manual'),
   });
 }
@@ -330,6 +332,7 @@ function renderArea(id) {
         <button class="btn" data-act="weak" ${s.weak ? '' : 'disabled'}>오답노트<small>${s.weak}문항</small></button>
         <button class="btn" data-act="seq">순서대로 풀기<small>1번부터 ${s.total}번</small></button>
         <button class="btn" data-act="random">랜덤 풀기<small>${s.total}문항</small></button>
+        <button class="btn" data-act="fresh" ${s.fresh ? '' : 'disabled'}>안 푼 문제만<small>${s.fresh}문항</small></button>
         <button class="btn" data-act="exam">모의고사<small>${Math.min(progress.settings.examCount, s.total)}문항</small></button>
         <button class="btn" data-act="list">정답 훑어보기<small>문제 + 정답 목록</small></button>
       </div>
@@ -339,6 +342,7 @@ function renderArea(id) {
     weak: () => startWeak([a]),
     seq: () => startSession('순서대로 · ' + a.name, a.questions.map((q) => q.id), 'practice'),
     random: () => startRandom([a]),
+    fresh: () => startFresh([a]),
     exam: () => startExam([a]),
     list: () => go('#/list/' + encodeURIComponent(a.id)),
   });
@@ -440,6 +444,10 @@ function startStudy(areaList) {
 }
 function startWeak(areaList) {
   startSession('오답노트', shuffle(questionsOf(areaList).filter(isWeak)), 'practice');
+}
+// 한 번도 풀지 않은 문제만 (섞어서)
+function startFresh(areaList) {
+  startSession('안 푼 문제', shuffle(questionsOf(areaList).filter(isNew)), 'practice');
 }
 function startRandom(areaList) {
   startSession('랜덤 풀기', shuffle(questionsOf(areaList)), 'practice');
